@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+server.stdout.log
+server.stderr.log
+node_modules/
+potholedtidrontend/node_modules/
+static/detections/
+static/frontend/assets/*.map
+database.db-shm
+database.db-wal
+ms-python.python-2026.4.0.vsix

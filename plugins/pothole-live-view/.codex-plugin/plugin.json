@@ -1,0 +1,37 @@
+{
+  "name": "pothole-live-view",
+  "version": "1.0.0",
+  "description": "Local plugin manifest for the pothole live detection feed.",
+  "author": {
+    "name": "Pranay Sen",
+    "email": "local@example.com",
+    "url": "http://127.0.0.1:5000"
+  },
+  "homepage": "http://127.0.0.1:5000/plugin/live-feed.json",
+  "repository": "http://127.0.0.1:5000",
+  "license": "Proprietary",
+  "keywords": [
+    "pothole",
+    "yolo"
+  ],
+  "interface": {
+    "displayName": "Pothole Live View",
+    "shortDescription": "View the live pothole detection feed and metadata.",
+    "longDescription": "Uses the local Flask server to expose recent pothole detections, model confidence, saved thumbnails, and location metadata.",
+    "developerName": "Pranay Sen",
+    "category": "Monitoring",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "http://127.0.0.1:5000/plugin/live-feed.json",
+    "privacyPolicyURL": "http://127.0.0.1:5000",
+    "termsOfServiceURL": "http://127.0.0.1:5000",
+    "defaultPrompt": [
+      "Show the latest pothole detections from the local feed.",
+      "Open the live JSON feed for the pothole dashboard.",
+      "Summarize detection confidence and live location metadata."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

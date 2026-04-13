@@ -1,0 +1,14 @@
+{
+  "id": 7,
+  "camera_id": 2,
+  "camera_name": "Phone Camera",
+  "lat": 28.4512322395872,
+  "lng": 77.58554239723908,
+  "confidence": 0.6305,
+  "timestamp": "2026-04-13 08:20:08",
+  "detection_label": "D20",
+  "image_path": "/static/detections/cam2_1776068408063_e2966278.jpg",
+  "location_source": "browser_fallback",
+  "gps_accuracy": null,
+  "saved_image": "detection.jpg"
+}
