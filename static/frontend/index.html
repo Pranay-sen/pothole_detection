@@ -10,5 +10,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+    (function(){
+      var s=document.createElement('style');
+      s.textContent='#_adminBtn{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:8px;padding:14px 24px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:999px;text-decoration:none;font-family:Manrope,sans-serif;font-weight:700;font-size:.9rem;box-shadow:0 8px 32px rgba(16,185,129,.35);transition:all .2s}#_adminBtn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(16,185,129,.5)}';
+      document.head.appendChild(s);
+      var a=document.createElement('a');
+      a.id='_adminBtn';
+      a.href='/admin';
+      a.innerHTML='&#x1f5fa;&#xfe0f; Pothole Management';
+      document.body.appendChild(a);
+    })();
+    </script>
   </body>
 </html>

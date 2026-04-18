@@ -1,0 +1,295 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    font-family: 'Manrope', -apple-system, sans-serif;
+    background: #07111f;
+    color: #ecf4ff;
+    overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+#topBar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 22px;
+    background: rgba(7, 17, 31, 0.88);
+    backdrop-filter: blur(22px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 24px;
+    width: 42px; height: 42px;
+    display: grid;
+    place-items: center;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 12px;
+}
+
+.brand h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #ecf4ff;
+}
+
+.tagline {
+    font-size: 0.7rem;
+    color: #7dd3fc;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.stats-bar {
+    display: flex;
+    gap: 12px;
+}
+
+.stat {
+    text-align: center;
+    padding: 5px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
+
+.stat span {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ff6b6b;
+}
+
+.stat-fixed span { color: #10b981; }
+.stat-detect span { color: #7dd3fc; font-size: 0.85rem; }
+
+.stat label {
+    font-size: 0.65rem;
+    color: #9ab1c8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
+
+.toggle-label input {
+    accent-color: #10b981;
+    width: 16px; height: 16px;
+    cursor: pointer;
+}
+
+.toggle-text {
+    font-size: 0.8rem;
+    color: #bfd1e4;
+}
+
+.dash-link {
+    color: #7dd3fc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    transition: all 150ms;
+}
+
+.dash-link:hover {
+    background: rgba(125, 211, 252, 0.1);
+    border-color: rgba(125, 211, 252, 0.4);
+}
+
+/* ── Map ───────────────────────────────────────────────────── */
+#map {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* ── Leaflet popup styling ─────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+    border-radius: 14px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
+    padding: 0 !important;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 13px !important;
+    min-width: 220px !important;
+}
+
+.popup-inner {
+    padding: 14px;
+}
+
+.popup-inner img {
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.popup-inner strong {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.popup-inner p {
+    margin: 3px 0;
+    color: #666;
+    font-size: 12px;
+}
+
+.popup-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 150ms;
+}
+
+.popup-btn.fix {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.popup-btn.fix:hover {
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.popup-btn.restore {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.popup-btn.restore:hover {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    transform: translateY(-1px);
+}
+
+.popup-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+}
+
+.status-badge.active {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.status-badge.fixed {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+#toastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    padding: 14px 20px;
+    background: rgba(7, 17, 31, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    color: #ecf4ff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: slideIn 300ms ease;
+    max-width: 360px;
+}
+
+.toast.success { border-color: rgba(16, 185, 129, 0.4); }
+.toast.error   { border-color: rgba(239, 68, 68, 0.4); }
+
+@keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 860px) {
+    #topBar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 14px;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .stats-bar { gap: 8px; }
+
+    .stat {
+        padding: 4px 10px;
+    }
+
+    .stat span {
+        font-size: 1rem;
+    }
+}

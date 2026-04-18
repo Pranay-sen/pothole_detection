@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pothole Tracker — Report & Track Road Hazards</title>
+    <meta name="description" content="View and report potholes in your area. Track road hazards in real-time and help hold authorities accountable.">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public_site/style.css">
+</head>
+<body>
+
+    <!-- ── Header bar ─────────────────────────────────────── -->
+    <header id="topBar">
+        <div class="brand">
+            <div class="logo-icon">🕳️</div>
+            <div>
+                <h1>Pothole Tracker</h1>
+                <p class="tagline">Real-time road hazard map</p>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat">
+                <span id="totalCount">0</span>
+                <label>Active Potholes</label>
+            </div>
+            <div class="stat stat-user">
+                <span id="userCount">0</span>
+                <label>User Reports</label>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Full-screen map ────────────────────────────────── -->
+    <div id="map"></div>
+
+    <!-- ── Floating report button ─────────────────────────── -->
+    <button id="reportBtn" onclick="openUploadModal()">
+        <span class="btn-icon">📸</span>
+        Report a Pothole
+    </button>
+
+    <!-- ── Upload Modal ───────────────────────────────────── -->
+    <div id="uploadModal" class="modal-overlay" style="display:none;">
+        <div class="modal">
+            <button class="modal-close" onclick="closeUploadModal()">✕</button>
+            <h2>Report a Pothole</h2>
+            <p class="modal-desc">
+                Take a photo of the pothole. Your live location will be used
+                to pin it on the map so authorities can see it.
+            </p>
+
+            <div id="locationStatus" class="location-badge">
+                <span class="pulse"></span>
+                Getting your location…
+            </div>
+
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('photoInput').click()">
+                <input
+                    type="file"
+                    id="photoInput"
+                    accept="image/*"
+                    capture="environment"
+                    onchange="previewPhoto(this)"
+                >
+                <div id="uploadPlaceholder">
+                    <span class="upload-icon">📷</span>
+                    <p>Tap to take a photo or choose from gallery</p>
+                </div>
+                <img id="photoPreview" style="display:none;" alt="Preview">
+            </div>
+
+            <button id="submitBtn" onclick="submitReport()" disabled>
+                <span id="submitText">Submit Report</span>
+                <span id="submitSpinner" style="display:none;" class="spinner"></span>
+            </button>
+
+            <div id="resultMessage" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/public_site/app.js"></script>
+</body>
+</html>

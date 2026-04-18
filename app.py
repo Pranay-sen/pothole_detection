@@ -34,10 +34,10 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 FRONTEND_BUILD_DIR = os.path.join(STATIC_DIR, "frontend")
 SNAPSHOT_DIR = os.path.join(STATIC_DIR, "detections")
 DETECTION_EXPORT_DIR = os.path.join(BASE_DIR, "saved_detections")
-DETECTION_INTERVAL = 5          # seconds between detection sweeps
+DETECTION_INTERVAL = 2         # seconds between detection sweeps
 DUPLICATE_DIST_THRESHOLD = 0.0005   # ~50 m in lat/lng degrees
 DUPLICATE_TIME_THRESHOLD = 300      # seconds (5 min)
-CONFIDENCE_THRESHOLD = 0.35         # minimum YOLO confidence
+CONFIDENCE_THRESHOLD = 0.2         # minimum YOLO confidence
 DEFAULT_LAT = 28.6139
 DEFAULT_LNG = 77.2090
 
@@ -786,6 +786,7 @@ def get_potholes():
             p.gps_accuracy
         FROM potholes p
         LEFT JOIN cameras c ON c.id = p.camera_id
+        WHERE p.status IS NULL OR p.status = 'active'
         ORDER BY p.timestamp DESC
         """
     ).fetchall()
@@ -870,7 +871,7 @@ def status():
     """Return detection system status."""
     conn = _get_conn()
     cam_count = conn.execute("SELECT COUNT(*) as cnt FROM cameras").fetchone()["cnt"]
-    pot_count = conn.execute("SELECT COUNT(*) as cnt FROM potholes").fetchone()["cnt"]
+    pot_count = conn.execute("SELECT COUNT(*) as cnt FROM potholes WHERE status IS NULL OR status = 'active'").fetchone()["cnt"]
     conn.close()
     phone_camera = get_phone_camera_row()
     return jsonify({
@@ -901,10 +902,17 @@ def export_detections():
 
 
 # ---------------------------------------------------------------------------
+# Admin extensions (Option B — React frontend untouched)
+# ---------------------------------------------------------------------------
+from admin_blueprint import admin_bp, init_admin_db
+app.register_blueprint(admin_bp)
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     init_db()
+    init_admin_db()
     log.info("==============================================")
     log.info("  Pothole Detection System Ready!")
     log.info("  Open: http://127.0.0.1:5000")

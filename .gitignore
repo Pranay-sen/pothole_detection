@@ -1,11 +1,36 @@
+# Python
 __pycache__/
 *.pyc
-server.stdout.log
-server.stderr.log
-node_modules/
-potholedtidrontend/node_modules/
-static/detections/
-static/frontend/assets/*.map
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+
+# Logs and databases
+*.log
+database.db
 database.db-shm
 database.db-wal
+
+# Models and data caches
+saved_detections/
+cctv_feed/
+
+# We ignore standard detection static uploads but allow frontend build
+static/detections/*
+!static/detections/.keep
+static/frontend/assets/*.map
+
+# Node
+node_modules/
+potholedtidrontend/node_modules/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+*.vsix
 ms-python.python-2026.4.0.vsix

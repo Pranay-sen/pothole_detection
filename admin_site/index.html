@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Pothole Management Map</title>
+    <meta name="description" content="Administrator pothole management dashboard with map-based removal.">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin_site/style.css">
+</head>
+<body>
+
+    <!-- Top bar -->
+    <header id="topBar">
+        <div class="brand">
+            <div class="logo-icon">🛡️</div>
+            <div>
+                <h1>Pothole Management</h1>
+                <p class="tagline">Administrator Control Panel</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span id="activeCount">0</span>
+                    <label>Active</label>
+                </div>
+                <div class="stat stat-fixed">
+                    <span id="fixedCount">0</span>
+                    <label>Fixed</label>
+                </div>
+                <div class="stat stat-detect">
+                    <span id="detectStatus">—</span>
+                    <label>Detection</label>
+                </div>
+            </div>
+            <label class="toggle-label">
+                <input type="checkbox" id="showFixedToggle" onchange="toggleFixed()">
+                <span class="toggle-text">Show Fixed</span>
+            </label>
+            <a href="/" class="dash-link">← Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/admin_site/app.js"></script>
+</body>
+</html>
