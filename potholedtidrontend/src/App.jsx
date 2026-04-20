@@ -107,17 +107,23 @@ function App() {
       return undefined;
     }
 
-    const watcher = navigator.geolocation.watchPosition(
-      (position) => {
-        setBrowserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        });
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 8000 },
-    );
+    let watcher;
+    const successCb = (position) => {
+      setBrowserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      });
+    };
+    
+    const errorCb = (err) => {
+      if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+        navigator.geolocation.clearWatch(watcher);
+        watcher = navigator.geolocation.watchPosition(successCb, () => {}, { enableHighAccuracy: false, maximumAge: 10000, timeout: 8000 });
+      }
+    };
+
+    watcher = navigator.geolocation.watchPosition(successCb, errorCb, { enableHighAccuracy: true, maximumAge: 10000, timeout: 8000 });
 
     return () => navigator.geolocation.clearWatch(watcher);
   }, []);

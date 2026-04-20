@@ -40,48 +40,58 @@ function getUserLocation() {
         return;
     }
 
-    navigator.geolocation.watchPosition(
-        function (pos) {
-            userLocation = {
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                accuracy: pos.coords.accuracy,
-            };
+    var successCb = function (pos) {
+        userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+        };
 
-            locationEl.innerHTML =
-                '<span class="pulse active"></span> Location: ' +
-                userLocation.lat.toFixed(5) + ', ' + userLocation.lng.toFixed(5) +
-                ' (±' + Math.round(userLocation.accuracy) + ' m)';
+        locationEl.innerHTML =
+            '<span class="pulse active"></span> Location: ' +
+            userLocation.lat.toFixed(5) + ', ' + userLocation.lng.toFixed(5) +
+            ' (±' + Math.round(userLocation.accuracy) + ' m)';
 
-            /* Show user marker on map */
-            if (!userMarker) {
-                userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
-                    radius: 10,
-                    color: '#3b82f6',
-                    weight: 3,
-                    fillColor: '#60a5fa',
-                    fillOpacity: 0.8,
-                }).addTo(map);
-                userMarker.bindPopup('📍 Your location');
-            } else {
-                userMarker.setLatLng([userLocation.lat, userLocation.lng]);
-            }
+        /* Show user marker on map */
+        if (!userMarker) {
+            userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+                radius: 10,
+                color: '#3b82f6',
+                weight: 3,
+                fillColor: '#60a5fa',
+                fillOpacity: 0.8,
+            }).addTo(map);
+            userMarker.bindPopup('📍 Your location');
+        } else {
+            userMarker.setLatLng([userLocation.lat, userLocation.lng]);
+        }
 
-            /* Centre map on user location the first time */
-            if (!mapCenteredOnUser) {
-                map.setView([userLocation.lat, userLocation.lng], 14);
-                mapCenteredOnUser = true;
-            }
+        /* Centre map on user location the first time */
+        if (!mapCenteredOnUser) {
+            map.setView([userLocation.lat, userLocation.lng], 14);
+            mapCenteredOnUser = true;
+        }
 
-            /* Enable submit button if a photo is selected */
-            updateSubmitState();
-        },
-        function () {
+        /* Enable submit button if a photo is selected */
+        updateSubmitState();
+    };
+
+    var errorCb = function (err) {
+        if (err.code === err.PERMISSION_DENIED) {
             locationEl.innerHTML =
                 '<span class="pulse error"></span> Location access denied. Please enable location.';
-        },
-        { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
-    );
+        } else if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+            navigator.geolocation.watchPosition(successCb, function(fallbackErr) {
+                locationEl.innerHTML =
+                    '<span class="pulse error"></span> Location unavailable.';
+            }, { enableHighAccuracy: false, maximumAge: 15000, timeout: 10000 });
+        } else {
+            locationEl.innerHTML =
+                '<span class="pulse error"></span> Location error.';
+        }
+    };
+
+    navigator.geolocation.watchPosition(successCb, errorCb, { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 });
 }
 
 /* ── Fetch and render potholes ─────────────────────────────── */

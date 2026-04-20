@@ -36,34 +36,42 @@ function initMap() {
 function getUserLocation() {
     if (!navigator.geolocation) return;
 
-    navigator.geolocation.watchPosition(
-        function (pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
+    var successCb = function (pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
 
-            if (!userMarker) {
-                userMarker = L.circleMarker([lat, lng], {
-                    radius: 10,
-                    color: '#3b82f6',
-                    weight: 3,
-                    fillColor: '#60a5fa',
-                    fillOpacity: 0.8,
-                }).addTo(map);
-                userMarker.bindPopup('📍 Your location');
-            } else {
-                userMarker.setLatLng([lat, lng]);
-            }
+        if (!userMarker) {
+            userMarker = L.circleMarker([lat, lng], {
+                radius: 10,
+                color: '#3b82f6',
+                weight: 3,
+                fillColor: '#60a5fa',
+                fillOpacity: 0.8,
+            }).addTo(map);
+            userMarker.bindPopup('📍 Your location');
+        } else {
+            userMarker.setLatLng([lat, lng]);
+        }
 
-            if (!mapCenteredOnUser) {
-                map.setView([lat, lng], 14);
-                mapCenteredOnUser = true;
-            }
-        },
-        function (err) {
-            console.warn('Location access denied or unavailable.', err);
-        },
-        { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
-    );
+        if (!mapCenteredOnUser) {
+            map.setView([lat, lng], 14);
+            mapCenteredOnUser = true;
+        }
+    };
+
+    var errorCb = function (err) {
+        console.warn('Location access denied or unavailable.', err);
+        if (err.code === err.PERMISSION_DENIED) {
+            showToast('Location access denied. Cannot show your position on map.', 'warn');
+        } else if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+            // Fallback to lower accuracy
+            navigator.geolocation.watchPosition(successCb, function(fallbackErr) {
+                console.warn('Fallback location also failed.', fallbackErr);
+            }, { enableHighAccuracy: false, maximumAge: 15000, timeout: 10000 });
+        }
+    };
+
+    navigator.geolocation.watchPosition(successCb, errorCb, { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 });
 }
 
 /* ── Toast notifications ───────────────────────────────────── */
