@@ -1,0 +1,32 @@
+{
+  "name": "roadwatch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RoadWatch — Road damage detection and tracking platform",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "setup": "npm install",
+    "dev": "node scripts/dev.js",
+    "start:backend": "npm run start --workspace=backend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "seed": "npm run seed --workspace=backend",
+    "test": "npm run test --workspace=backend"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "leaflet": "^1.9.4",
+    "mongoose": "^8.8.2",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "vite": "^6.2.0"
+  }
+}

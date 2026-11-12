@@ -1,36 +1,55 @@
+# Node
+.roadwatch-backup/
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
 env/
 venv/
-.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment
 .env
-
-# Logs and databases
-*.log
-database.db
-database.db-shm
-database.db-wal
-
-# Models and data caches
-saved_detections/
-cctv_feed/
-
-# We ignore standard detection static uploads but allow frontend build
-static/detections/*
-!static/detections/.keep
-static/frontend/assets/*.map
-
-# Node
-node_modules/
-potholedtidrontend/node_modules/
-
-# IDE and OS
-.vscode/
-.idea/
+backend/.env
 .DS_Store
-*.vsix
-ms-python.python-2026.4.0.vsix
+Thumbs.db
+
+# Old cloned repository
+/pothole_detection/
+
+# Datasets and training outputs
+/RDD_pothole/
+/runs/
+
+# Model weights
+*.pt
+*.pth
+*.onnx
+
+# Secrets
+.env.*
+!.env.example

@@ -1,0 +1,32 @@
+{
+  "name": "pothole-backend",
+  "version": "1.0.0",
+  "description": "Node.js Express & MongoDB backend for Pothole Tracking and Geospatial Search",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --watch src --watch .env src/server.js",
+    "seed": "node scripts/seedPotholes.js",
+    "test": "node test/smoke.test.js && node --test test/regressions.test.cjs"
+  },
+  "keywords": [
+    "express",
+    "mongodb",
+    "mongoose",
+    "pothole",
+    "geospatial",
+    "geojson"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.2",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

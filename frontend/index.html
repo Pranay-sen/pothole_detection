@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101c2d" />
+  <title>RoadWatch — Road Intelligence & Pothole Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./workspace.css" />
+</head>
+<body>
+  <a class="skip-link" href="#view-dashboard">Skip to workspace</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" data-go="dashboard" href="#dashboard" aria-label="RoadWatch home">
+        <span class="brand-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 37 33H3L20 3Z" fill="currentColor"/><path d="m20 12 10 18H10L20 12Z" fill="#101c2d"/><path d="m20 19 5 9H15l5-9Z" fill="#62b6ff"/></svg></span>
+        <span>Road<span class="brand-light">Watch</span><small>ROAD INTELLIGENCE</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item active" aria-current="page" data-view="dashboard"><span class="nav-icon">◫</span><span>Overview</span></button>
+        <button class="nav-item" data-view="detection"><span class="nav-icon">◎</span><span>Live detection</span><span class="nav-live"></span></button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span><span>Reports</span><span class="nav-count" id="navReportCount">0</span></button>
+        <button class="nav-item" data-view="map"><span class="nav-icon">⌖</span><span>Map explorer</span></button>
+        <button class="nav-item" data-view="submit"><span class="nav-icon">＋</span><span>Submit a report</span></button>
+      </nav>
+      <div class="workspace-label admin-label">MANAGEMENT</div>
+      <nav class="nav-list" aria-label="Management navigation">
+        <button class="nav-item" data-view="admin"><span class="nav-icon">▦</span><span>Admin review</span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="system-card">
+          <div class="system-heading"><span>System status</span><span class="status-dot" id="systemStatusDot"></span></div>
+          <div class="system-row"><span><i></i> Backend API</span><b id="sidebarApiState">Connecting...</b></div>
+          <div class="system-row"><span><i></i> Detection model</span><b id="sidebarModelState">YOLO11s</b></div>
+          <div class="system-row"><span><i></i> MongoDB Atlas</span><b id="sidebarDbState">Checking…</b></div>
+          <p id="sidebarSummaryText">Checking service connections…</p>
+        </div>
+      </div>
+    </aside>
+
+    <button type="button" class="sidebar-scrim" id="sidebarScrim" aria-label="Close navigation" tabindex="-1"></button>
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menuButton" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+        <a class="mobile-brand" href="#dashboard" data-go="dashboard" aria-label="RoadWatch overview">RoadWatch<span>●</span></a>
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-sep">/</span><b id="breadcrumbCurrent">Overview</b></div>
+        <label class="global-search"><span>⌕</span><input id="globalSearch" type="search" placeholder="Search reports, locations, roads…" aria-label="Search reports and locations"/><kbd>⌘ K</kbd></label>
+        <div class="topbar-actions"><span class="workspace-context">ROAD OPERATIONS</span><div class="top-user"><span class="avatar">RW</span><span><b>Operator</b><small>Live system</small></span></div></div>
+      </header>
+
+      <!-- VIEW 1: DASHBOARD / OVERVIEW -->
+      <section class="view active" id="view-dashboard" tabindex="-1">
+        <div class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> LIVE MONITORING</div><h1>Road intelligence<span class="heading-period">.</span></h1><p>A clearer view of every road. Detect damage, map evidence and track repairs.</p></div>
+          <div class="heading-actions"><button class="button button-quiet" id="refreshButton"><span>↻</span> Refresh data</button><button class="button button-primary" data-go="detection">Start detection <span>↗</span></button></div>
+        </div>
+        <div class="demo-banner" id="statusBanner"><span class="demo-banner-icon">i</span><span><b id="bannerTitle">Your road network, in focus</b> — Every pin connects a reported hazard to a place and its evidence.</span><button id="dismissBanner" aria-label="Dismiss notice">×</button></div>
+        <div class="metric-grid">
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">Total reports</span><span class="metric-icon blue">▤</span></div><div class="metric-value"><span id="metricTotal">0</span> <span class="metric-trend up">Live</span></div><div class="metric-foot"><span class="mini-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span>reports recorded</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">Open reports</span><span class="metric-icon coral">◷</span></div><div class="metric-value"><span id="metricOpen">0</span> <span class="metric-trend down">Active</span></div><div class="metric-foot"><span class="metric-note">Needs triage</span><span class="tiny-pill coral-pill" id="metricUrgentPill">0 open</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">In progress</span><span class="metric-icon blue">⟳</span></div><div class="metric-value"><span id="metricInProgress">0</span> <span class="metric-trend up">Triage</span></div><div class="metric-foot"><span class="metric-note">Under inspection</span><span class="tiny-pill amber-pill">Active</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span class="metric-label">Resolved reports</span><span class="metric-icon green">✓</span></div><div class="metric-value"><span id="metricFixed">0</span> <span class="metric-trend up">Fixed</span></div><div class="metric-foot"><span class="progress-track"><i id="metricResolutionProgress" style="width:0%"></i></span><span id="metricResolutionRate">0% rate</span></div></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel map-panel">
+            <div class="panel-heading"><div><div class="section-title-row"><h2>Road damage map</h2><span class="live-chip"><i></i> LIVE TILES</span></div><p>Reported hazards. Real places.</p></div><button class="text-button" data-go="map">Explore map <span>↗</span></button></div>
+            <div class="map-toolbar"><label class="map-search"><span>⌕</span><input id="mapSearch" aria-label="Search dashboard map" type="search" placeholder="Search area or road" /></label><div class="map-layer-control"><button class="layer-button active" id="streetLayer">Street</button><button class="layer-button" id="satelliteLayer">Satellite</button></div></div>
+            <div id="dashboardMap" class="map-canvas" aria-label="Map showing road damage reports"><div class="map-loading" id="dashboardMapLoading">Loading map tiles…</div></div>
+            <div class="map-legend"><span><i class="legend-dot high"></i> Active Potholes <b id="legendActive">0</b></span><span class="legend-divider"></span><span><i class="legend-dot fixed"></i> Fixed <b id="legendFixed">0</b></span><span class="legend-note">Select a pin for details</span></div>
+          </section>
+          <section class="panel recent-panel">
+            <div class="panel-heading"><div><h2>Latest reports</h2><p>Evidence from the field</p></div><button class="text-button" data-go="reports">View all <span>→</span></button></div>
+            <div class="recent-list" id="recentReports"></div>
+            <button class="button button-outline full-button" data-go="reports">Open reports directory <span>→</span></button>
+          </section>
+        </div>
+
+        <div class="bottom-grid">
+          <section class="panel activity-panel"><div class="panel-heading"><div><h2>Report status breakdown</h2><p>Database records by status</p></div><span class="eyebrow">STATUS MIX</span></div><div class="chart-wrap"><div class="chart-y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="chart-main"><div class="chart-grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="bar-chart" id="barChart"></div><div class="chart-x-labels"><span>Open</span><span>In Progress</span><span>Fixed</span></div></div></div></section>
+          <section class="panel priority-panel"><div class="panel-heading"><div><h2>Open reports</h2><p>Active reports pending review</p></div><span class="count-badge" id="attentionCountBadge">0</span></div><div class="attention-list" id="attentionList"></div><button class="text-button attention-link" data-go="admin">Open review queue <span>→</span></button></section>
+        </div>
+        <footer class="page-footer"><span>RoadWatch <span>·</span> Road Intelligence Platform</span><span>Detect <span>·</span> Locate <span>·</span> Resolve</span></footer>
+      </section>
+
+      <!-- VIEW 2: REPORTS DIRECTORY -->
+      <section class="view" id="view-reports">
+        <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> REPORT MANAGEMENT</div><h1>Reports directory</h1><p>Find the evidence. Review the location. Move each report forward.</p></div>
+        <div class="heading-actions">
+          <button class="button button-quiet" id="filterNearMeReports"><span>📍</span> Near Me (5 km)</button>
+          <button class="button button-primary" data-go="submit"><span>＋</span> Create report</button>
+        </div>
+        </div>
+        <div class="metric-strip"><div><span>All reports</span><b id="stripTotal">0</b></div><div><span>Open</span><b class="text-coral" id="stripOpen">0</b></div><div><span>In progress</span><b class="text-blue" id="stripInProgress">0</b></div><div><span>Resolved</span><b class="text-green" id="stripFixed">0</b></div></div>
+        <section class="panel directory-panel"><div class="directory-toolbar"><label class="field-search"><span>⌕</span><input id="reportSearch" aria-label="Search reports" type="search" placeholder="Search by UUID, road, locality, or city…" /></label><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="verified">Verified</option><option value="fixed">Fixed</option></select><button class="button button-quiet" id="resetFilters">Reset filters</button></div><div class="reports-load-state hidden" id="reportsLoadState" role="status"><span id="reportsLoadMessage"></span><button class="button button-outline" id="retryReports" type="button">Retry</button></div><div class="table-wrap"><table><thead><tr><th>REPORT</th><th>LOCATION</th><th>STATUS</th><th>CREATED</th><th>ACTIONS</th></tr></thead><tbody id="reportTableBody"></tbody></table><div class="empty-state hidden" id="reportEmpty"><span>⌕</span><h3>No matching reports</h3><p>Try a different search or reset your filters.</p></div></div><div class="table-footer"><span id="tableCount" aria-live="polite">Showing 0 reports</span><div class="pagination"><button id="prevPageBtn" disabled aria-label="Previous page">‹</button><button class="current" id="currPageBtn" aria-label="Current page" aria-current="page">1</button><button id="nextPageBtn" disabled aria-label="Next page">›</button></div></div></section>
+      </section>
+
+      <!-- VIEW 3: MAP EXPLORER -->
+      <section class="view" id="view-map"><div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> GEOSPATIAL VIEW</div><h1>Map explorer</h1><p>Explore the road network and inspect each reported hazard.</p></div><div class="heading-actions"><button class="button button-quiet" id="locateButton">⌖ My GPS Location</button><button class="button button-quiet" id="filterNearMeMap">📍 Near Me (5 km)</button><button class="button button-primary" data-go="submit">＋ New report</button></div></div><div class="panel explorer-panel"><div class="explorer-toolbar"><label class="field-search"><span>⌕</span><input id="explorerSearch" aria-label="Search map explorer" type="search" placeholder="Search area or road"/></label><div class="map-legend compact"><span><i class="legend-dot high"></i> Active Potholes</span><span><i class="legend-dot fixed"></i> Fixed</span></div></div><div id="explorerMap" class="explorer-map"></div><div class="map-bottom-note"><span id="mapLocNote"><i class="legend-dot high"></i> Live coordinates loaded from MongoDB</span><span>Leaflet + OpenStreetMap tiles</span></div></div></section>
+
+      <!-- VIEW 4: LIVE DETECTION -->
+      <section class="view" id="view-detection"><div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> COMPUTER VISION</div><h1>Live detection</h1><p>Turn a road image or camera feed into actionable evidence.</p></div><span class="preview-chip" id="detectEngineChip"><i></i> YOLO11s ACTIVE</span></div><div class="detection-layout"><section class="panel detection-workspace"><div class="panel-heading"><div><h2>Detection workspace</h2><p>Choose an input source: Webcam, IP Camera, or Upload.</p></div><span class="live-pill" id="livePill">Model Ready</span></div>
+      
+      <!-- Source tabs: Webcam, IP Webcam, Image Upload -->
+      <div class="source-tabs" id="sourceTabs">
+        <button class="source-tab active" data-source="webcam">◉ Live Webcam</button>
+        <button class="source-tab" data-source="ipcam">📶 IP Webcam (Mobile/WiFi)</button>
+        <button class="source-tab" data-source="upload">↑ Upload Photo</button>
+      </div>
+        
+      <div class="camera-stage" id="cameraStage">
+        <div class="camera-grid"></div>
+        
+        <!-- Webcam Video Element -->
+        <video id="webcamVideo" autoplay playsinline muted style="display:none;"></video>
+        <!-- IP Camera or Uploaded Image Element -->
+        <img id="previewImage" alt="Detection input" style="display:none;" />
+        <!-- Overlay Canvas for Bounding Boxes -->
+        <canvas id="overlayCanvas"></canvas>
+        
+        <div class="camera-placeholder" id="cameraPlaceholder">
+          <div class="camera-symbol">◉</div>
+          <b id="cameraTitle">Live Video / Camera Feed</b>
+          <p id="cameraHint">Start your webcam, connect your mobile IP camera, or select an image to detect potholes.</p>
+          <span class="camera-preview-tag" id="cameraTag">STANDBY</span>
+        </div>
+
+        <div class="stage-corner top-left"></div>
+        <div class="stage-corner top-right"></div>
+        <div class="stage-corner bottom-left"></div>
+        <div class="stage-corner bottom-right"></div>
+      </div>
+
+      <!-- IP Webcam Connection Box (Visible when IP Webcam tab active) -->
+      <div class="ipcam-panel" id="ipcamPanel" style="display:none;">
+        <div class="ipcam-row">
+          <span style="font-size:10px;font-weight:700;color:#55667d;white-space:nowrap;">IP Camera URL:</span>
+          <input type="url" id="ipcamUrlInput" class="ipcam-input" placeholder="http://192.168.1.5:8080/shot.jpg" value="http://192.168.1.5:8080/shot.jpg" />
+          <button class="button button-primary" id="connectIpcamBtn" style="min-height:34px;">▶ Connect & Detect</button>
+          <button class="button button-danger" id="stopIpcamBtn" style="min-height:34px;display:none;">■ Disconnect</button>
+        </div>
+        <div class="ipcam-presets">
+          <span style="font-size:9px;color:#8a99ac;align-self:center;">Presets:</span>
+          <button type="button" class="preset-chip" data-preset="android">Android IP Webcam (:8080/shot.jpg)</button>
+          <button type="button" class="preset-chip" data-preset="droidcam">DroidCam (:4747/cam/1/frame.jpg)</button>
+          <button type="button" class="preset-chip" data-preset="esp32">ESP32-CAM (:81/stream)</button>
+        </div>
+      </div>
+
+      <!-- Upload Zone Controls (Visible when Upload tab active) -->
+      <div class="sample-images-shelf" id="uploadPanel" style="display:none;">
+        <input type="file" id="detectionFileInput" accept="image/*" style="display:none;" />
+        <button class="button button-primary" id="uploadDetectionBtn" style="min-height:34px;"><span>↑</span> Select Road Image from Computer</button>
+        <span style="font-size:10px;color:#7e8ea2;">Upload any high-res JPG or PNG of a road surface to detect potholes.</span>
+      </div>
+
+      <div class="camera-controls">
+        <div class="control-select" id="cameraDeviceSelectGroup">
+          <label for="cameraSelect">CAMERA DEVICE</label>
+          <select id="cameraSelect"><option value="">Default Integrated Camera</option></select>
+        </div>
+        <button class="button button-primary" id="startDetection">▶ Start Webcam Detection</button>
+        <button class="button button-danger" id="stopDetection" disabled>■ Stop</button>
+        <button class="button button-primary" id="instantPinBtn" style="display:none;background:#2477e8;"><span>📍</span> Register to Map Now</button>
+        <button class="button button-outline" id="createReportFromDetectBtn" style="display:none;"><span>＋</span> Create Detailed Report</button>
+      </div>
+
+      <!-- Auto-Register to Map & DB Switch -->
+      <div class="auto-register-bar" style="display:flex;align-items:center;justify-content:space-between;background:#f7f9fc;border:1px solid #e7edf4;padding:10px 14px;border-radius:9px;margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">⚡</span>
+          <div>
+            <b style="font-size:11px;display:block;color:#1e293b;">Auto-Register Potholes to Map & MongoDB</b>
+            <small style="font-size:9px;color:#77859a;">Automatically pins detected potholes with current GPS location into MongoDB Atlas (8s anti-duplicate cooldown)</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="autoRegisterToggle" type="checkbox">
+          <span></span>
+        </label>
+      </div>
+
+      <div class="preview-notice"><span>ⓘ</span><p id="detectionNotice">Model constraint: This YOLO11s model is trained specifically for pothole detection (single-class: 'pothole'). Confidence threshold is configurable.</p></div>
+      </section>
+
+      <aside class="detection-side"><section class="panel model-panel"><div class="panel-heading"><div><h2>Model status</h2><p>Runtime connection</p></div><span class="metric-icon blue">⌘</span></div><div class="model-status-row"><span class="model-status-icon">◎</span><div><b id="modelNameDisplay">YOLO11s Pothole Model</b><small id="modelTargetDisplay">Class: pothole</small></div></div><div class="model-detail"><span>Inference engine</span><b id="modelEngineDisplay">PyTorch / Ultralytics</b></div><div class="model-detail"><span>Model weight file</span><b>model/best.pt</b></div><div class="model-detail"><span>Confidence threshold</span><b id="confDisplay">0.25</b></div><div class="model-detail"><span>Input resolution</span><b>640 × 640</b></div></section><section class="panel session-panel"><div class="panel-heading"><div><h2>Detection telemetry</h2><p>Current session metrics</p></div></div><div class="session-stat"><span>Frames processed</span><b id="framesProcessed">0</b></div><div class="session-stat"><span>Potholes detected</span><b id="damageDetected">0</b></div><div class="session-stat"><span>Auto-registered to Map</span><b id="autoRegisteredCount">0</b></div><div class="session-stat"><span>Avg. confidence</span><b id="avgConfidence">—</b></div><div class="session-stat"><span>Inference latency</span><b id="lastInferTime">—</b></div><button class="button button-outline full-button" data-go="reports">View database reports →</button></section></aside></div></section>
+
+      <!-- VIEW 5: SUBMIT REPORT -->
+      <section class="view" id="view-submit"><div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> COMMUNITY REPORTING</div><h1>Report road damage</h1><p>Add the details, choose the damage location and attach a clear photo.</p></div><span class="preview-chip">LIVE SUBMISSION</span></div><div class="form-layout"><section class="panel report-form-panel"><div class="form-step-heading"><span class="step-number">01</span><div><h2>Hazard details</h2><p>Identify the road condition.</p></div></div>
+      <form id="reportForm" novalidate>
+        <div class="form-grid">
+          <div class="form-field"><label for="damageType">Damage type <span>*</span></label><select id="damageType" required><option value="pothole" selected>Pothole (Supported by YOLO model)</option><option value="deep_crater">Deep Crater</option><option value="surface_pothole">Surface Pothole</option><option value="edge_break">Edge Break</option><option value="other">Other road damage</option></select><small class="field-error" data-error="damageType"></small></div>
+          <div class="form-field"><label for="roadName">Road / street name <span>*</span></label><input id="roadName" placeholder="e.g. 100 Feet Road" required /><small class="field-error" data-error="roadName"></small></div>
+          <div class="form-field"><label for="city">City / area <span>*</span></label><input id="city" placeholder="e.g. Bengaluru, Indiranagar" required/><small class="field-error" data-error="city"></small></div>
+          <div class="form-field"><label for="reportedBy">Reporter name <span class="optional">Optional</span></label><input id="reportedBy" placeholder="Citizen or Sensor ID" /></div>
+          <div class="form-field full"><label for="description">Description <span class="optional">Optional</span></label><textarea id="description" rows="3" placeholder="Describe depth, water accumulation, or road condition…"></textarea><div class="field-helper">What should the repair team know?</div></div>
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-step-heading location-step"><span class="step-number">02</span><div><h2>Where is the damage?</h2><p>Select the pothole location. It may be different from where you are now.</p></div></div>
+        
+        <!-- Interactive Geolocation Mini-Map -->
+        <div class="location-actions">
+          <button type="button" class="button button-primary" id="getLocation">⌖ Use device location</button>
+          <span id="locationStatus" class="location-status">No location selected. Click the map to place your report pin.</span>
+        </div>
+        <p class="location-explainer">The red pin marks the damage location saved with this report. Device location may be approximate; move the pin to the correct spot.</p>
+        <div id="submitMiniMap" class="submit-mini-map" aria-label="Interactive map to select damage location"></div>
+
+        <div class="form-grid coords-grid">
+          <div class="form-field"><label for="latitude">Latitude <span>*</span></label><input id="latitude" type="number" step="any" placeholder="12.9716" required /><small class="field-error" data-error="latitude"></small></div>
+          <div class="form-field"><label for="longitude">Longitude <span>*</span></label><input id="longitude" type="number" step="any" placeholder="77.5946" required /><small class="field-error" data-error="longitude"></small></div>
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-step-heading"><span class="step-number">03</span><div><h2>Attach photo (optional)</h2><p>Attach a road photo to help reviewers inspect the damage.</p></div></div>
+        <label class="upload-zone" id="uploadZone" for="photoInput" tabindex="0" role="button" aria-label="Attach report photo">
+          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden/>
+          <span class="upload-icon">↑</span>
+          <b>Click to attach a road photo</b>
+          <small>JPG, PNG or WEBP · up to 10 MB</small>
+          <span class="upload-file hidden" id="uploadFile"></span>
+        </label>
+        <div class="report-photo-attachment hidden" id="reportPhotoAttachment"><img id="reportPhotoPreview" alt="Photo attached to this report" /><button type="button" class="button button-quiet" id="removeReportPhoto">Remove photo</button></div>
+        <div class="form-actions"><button type="reset" class="button button-quiet" id="resetForm">Reset form</button><button type="submit" class="button button-primary" id="submitReportBtn">Submit report <span>→</span></button></div>
+        <p class="form-disclaimer">Check the location and photo before submitting your report.</p>
+      </form></section>
+      <aside class="form-aside"><section class="panel tips-panel"><span class="tips-icon">✦</span><h3>Good reporting practices</h3><p>Accurate reports speed up civic response times.</p><div class="tip-row"><span>01</span><div><b>Precise coordinates</b><p>Place the pin where the damage is, rather than at your current location.</p></div></div><div class="tip-row"><span>02</span><div><b>Road details</b><p>Accurate road name helps municipal teams locate damage quickly.</p></div></div><div class="tip-row"><span>03</span><div><b>Photo evidence</b><p>Attach a clear road photo. Use Live Detection to analyze it with YOLO.</p></div></div></section><section class="panel privacy-panel"><span class="privacy-icon">♧</span><div><b>Ready for review</b><p>Your photo, location and notes stay together as the report moves through review.</p></div></section></aside></div></section>
+
+      <!-- VIEW 6: ADMIN REVIEW -->
+      <section class="view" id="view-admin"><div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> OPERATIONS</div><h1>Admin review</h1><p>Prioritize hazards and keep repair progress moving.</p></div><span class="preview-chip">LIVE QUEUE</span></div><div class="admin-summary"><div class="admin-summary-card"><span>Awaiting review</span><b id="adminAwaitingCount">0</b><small>Reports pending triage</small></div><div class="admin-summary-card"><span>In progress</span><b class="text-blue" id="adminProgressCount">0</b><small>Being inspected</small></div><div class="admin-summary-card"><span>Marked fixed</span><b class="text-green" id="adminFixedCount">0</b><small>Resolved reports</small></div></div><section class="panel directory-panel"><div class="panel-heading admin-table-heading"><div><h2>Review queue</h2><p>Update report lifecycle: Open → In Progress → Fixed</p></div><div class="admin-tabs"><button class="admin-tab active" data-admin-filter="open">Open</button><button class="admin-tab" data-admin-filter="in_progress">In progress</button><button class="admin-tab" data-admin-filter="fixed">Fixed</button><button class="admin-tab" data-admin-filter="all">All</button></div></div><div class="table-wrap"><table><thead><tr><th>REPORT</th><th>LOCATION</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="adminTableBody"></tbody></table></div><div class="admin-demo-note">Move reports from open to in progress, then mark repairs as fixed. Photos and notes stay attached.</div></section></section>
+
+      <!-- VIEW 7: SETTINGS -->
+      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> PREFERENCES & DIAGNOSTICS</div><h1>Workspace settings</h1><p>System diagnostics and application preferences.</p></div></div><div class="settings-grid"><section class="panel settings-panel"><h2>Appearance</h2><p>Customize the visual presentation of your workspace.</p><div class="setting-row"><div><b>Compact tables</b><small>Reduce row spacing in reports and admin lists.</small></div><label class="switch"><input id="compactToggle" aria-label="Compact tables" type="checkbox"><span></span></label></div><div class="setting-row"><div><b>Show live status banner</b><small>Keep the system information notice visible on overview.</small></div><label class="switch"><input id="bannerToggle" aria-label="Show live status banner" type="checkbox" checked><span></span></label></div></section><section class="panel settings-panel"><h2>System Diagnostics</h2><p>Live health status of integrated components.</p><div class="integration-row"><span class="integration-icon">⌘</span><div><b>Node.js Express Backend</b><small id="diagApi">Checking...</small></div><span class="status-pill" id="diagApiPill">Checking</span></div><div class="integration-row"><span class="integration-icon">◉</span><div><b>MongoDB Atlas Cluster</b><small id="diagDb">Checking...</small></div><span class="status-pill" id="diagDbPill">Checking</span></div><div class="integration-row"><span class="integration-icon">⌖</span><div><b>YOLO11s Detection Engine</b><small id="diagModel">Checking...</small></div><span class="status-pill" id="diagModelPill">Checking</span></div><div style="margin-top:16px;"><button class="button button-quiet" id="diagCheckBtn">Re-run health check</button></div></section></div></section>
+    </main>
+  </div>
+
+  <!-- Toast and Modal Elements -->
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  <div class="modal-backdrop hidden" id="modalBackdrop" role="presentation"><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><button class="modal-close" id="modalClose" aria-label="Close report details">×</button><div class="modal-eyebrow">REPORT DETAILS</div><div id="detailContent"></div><div class="modal-actions"><button class="button button-quiet" id="modalCancel">Close</button><button class="button button-primary" id="modalAction">Mark as fixed</button></div></section></div>
+
+  <!-- Scripts -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
