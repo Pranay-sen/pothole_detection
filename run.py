@@ -1,223 +1,125 @@
-#!/usr/bin/env python3
-"""
-RoadWatch Unified Full-Stack Launcher & Environment Setup
-One command to install dependencies, test, and start:
-- Node.js Express Backend (Port 3000)
-- React/Vite Frontend (Port 5173)
-- YOLO11s Inference Engine (Port 5001)
-
-Usage:
-    python run.py           # Start all services concurrently
-    python run.py --setup   # Install all npm and verify Python dependencies
-    python run.py --test    # Run backend smoke & API tests
-"""
-import os
-import sys
-import time
-import signal
+"""Install and run RoadWatch from a fresh clone."""
 import argparse
-import subprocess
+import importlib.util
+import os
+from pathlib import Path
 import shutil
 import socket
+import subprocess
+import sys
+import time
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-IS_WINDOWS = sys.platform.startswith('win')
+ROOT = Path(__file__).resolve().parent
+WINDOWS = os.name == "nt"
+STATE = ROOT / ".roadwatch"
+VENV_PYTHON = ROOT / ".venv" / ("Scripts/python.exe" if WINDOWS else "bin/python")
+MODEL = ROOT / "model" / "best.pt"
+SAMPLE = ROOT / "frontend" / "public" / "samples" / "pothole_1.jpg"
+ML_IMPORTS = ("torch", "torchvision", "ultralytics", "PIL")
 
-# Ensure UTF-8 output on Windows console
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-if hasattr(sys.stderr, 'reconfigure'):
-    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
-CHILD_PROCESSES = []
+def run(*command):
+    subprocess.run(command, cwd=ROOT, check=True)
 
-def print_banner():
-    banner = r"""
-  +==============================================================+
-  |                 ROADWATCH -- FULL-STACK LAUNCHER             |
-  |       Road Intelligence & YOLO11s Pothole Detection          |
-  +==============================================================+
-    """
-    print(banner)
 
-def run_command(cmd, cwd=ROOT_DIR, check=True):
-    print(f"--> Running: {' '.join(cmd) if isinstance(cmd, list) else cmd} (in {os.path.relpath(cwd, ROOT_DIR) or '.'})")
-    shell = IS_WINDOWS and not isinstance(cmd, list)
-    return subprocess.run(cmd, cwd=cwd, shell=shell, check=check)
+def ensure_dependencies():
+    npm = shutil.which("npm.cmd" if WINDOWS else "npm")
+    node = shutil.which("node")
+    if not npm or not node:
+        raise SystemExit("Install Node.js 22 LTS, then run setup again.")
+    if not MODEL.is_file() or MODEL.stat().st_size < 1_000_000:
+        raise SystemExit("Missing model/best.pt. Clone or download the main branch from GitHub.")
 
-def check_python_environment():
-    print("\n🔍 Checking Python ML dependencies...")
-    try:
-        import torch
-        import ultralytics
-        from ultralytics import YOLO
-        print(f"  ✓ PyTorch: {torch.__version__}")
-        print(f"  ✓ Ultralytics: {ultralytics.__version__}")
-    except ImportError as e:
-        print(f"  ⚠️ Warning: {e}")
-        print("  To enable YOLO detection: pip install torch ultralytics pillow")
+    STATE.mkdir(exist_ok=True)
+    config = STATE / "ultralytics"
+    config.mkdir(exist_ok=True)
+    os.environ.setdefault("YOLO_CONFIG_DIR", str(config))
+    lock = (ROOT / "package-lock.json").read_bytes()
+    stamp = STATE / "npm-lock"
+    if not (ROOT / "node_modules/mongodb-memory-server-core/package.json").is_file() or not stamp.exists() or stamp.read_bytes() != lock:
+        print("Installing Node dependencies...", flush=True)
+        run(npm, "ci", "--no-audit", "--no-fund")
+        stamp.write_bytes(lock)
 
-    model_path = os.path.join(ROOT_DIR, 'model', 'best.pt')
-    if os.path.exists(model_path):
-        size_mb = os.path.getsize(model_path) / (1024 * 1024)
-        print(f"  ✓ Model: {model_path} ({size_mb:.1f} MB) found.")
-    else:
-        print(f"  ⚠️ Model file not found at {model_path}. Pothole detection will show unavailable.")
+    if all(importlib.util.find_spec(name) for name in ML_IMPORTS):
+        return sys.executable
 
-def setup_dependencies():
-    print_banner()
-    print("📦 Setting up RoadWatch dependencies...\n")
-    check_python_environment()
+    if not VENV_PYTHON.exists():
+        if not (3, 10) <= sys.version_info[:2] <= (3, 13):
+            raise SystemExit("Install 64-bit Python 3.10 through 3.13, then run setup again.")
+        run(sys.executable, "-m", "venv", str(ROOT / ".venv"))
 
-    npm_cmd = 'npm.cmd' if IS_WINDOWS else 'npm'
-    if not shutil.which(npm_cmd):
-        print(f"❌ Error: '{npm_cmd}' not found in PATH. Please install Node.js.")
-        sys.exit(1)
+    python = str(VENV_PYTHON)
+    if subprocess.run([python, "-c", "import torch, torchvision, ultralytics, PIL"], capture_output=True).returncode:
+        print("Installing CPU inference dependencies...", flush=True)
+        if WINDOWS or sys.platform.startswith("linux"):
+            run(python, "-m", "pip", "install", "torch==2.7.1", "torchvision==0.22.1",
+                "--index-url", "https://download.pytorch.org/whl/cpu")
+        run(python, "-m", "pip", "install", "-r", str(ROOT / "requirements.txt"))
+    return python
 
-    print("\n📦 Running root-level 'npm install' (npm workspaces)...")
-    run_command([npm_cmd, 'install'], cwd=ROOT_DIR)
 
-    print("\n🔨 Building frontend assets for validation...")
-    run_command([npm_cmd, 'run', 'build:frontend'], cwd=ROOT_DIR)
-
-    print("\n✅ Setup complete! You can now start the application with:")
-    print("    python run.py\n")
-
-def run_tests():
-    print_banner()
-    print("🧪 Running RoadWatch Test Suite...\n")
-    npm_cmd = 'npm.cmd' if IS_WINDOWS else 'npm'
-
-    print("1. Route smoke tests and regression tests:")
-    run_command(['node', 'test/smoke.test.js'], cwd=os.path.join(ROOT_DIR, 'backend'))
-    run_command(['node', '--test', 'test/regressions.test.cjs'], cwd=os.path.join(ROOT_DIR, 'backend'))
-
-    print("\n2. Backend API routes test:")
-    run_command(['node', 'test/api.test.js'], cwd=os.path.join(ROOT_DIR, 'backend'))
-
-    print("\n3. Testing YOLO11s model inference:")
-    test_img = os.path.join(ROOT_DIR, 'RDD_pothole', 'test', 'images', 'China_Drone_000286.jpg')
-    if os.path.exists(test_img):
-        run_command([sys.executable, 'scripts/infer.py', '--image', test_img], cwd=ROOT_DIR)
-
-    print("\n🎉 All tests passed successfully!")
-
-def start_child_process(name, cmd, cwd, color_code):
-    print(f"  [{name}] Launching: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        shell=IS_WINDOWS and isinstance(cmd, str),
-        text=True,
-        bufsize=1
-    )
-    CHILD_PROCESSES.append((name, proc))
-
-    import threading
-    def stream_output(process, tag, color):
-        for line in iter(process.stdout.readline, ''):
-            if line:
-                line_str = line.rstrip()
-                # Filter noisy logs
-                print(f"\033[{color}m[{tag}]\033[0m {line_str}")
-        process.stdout.close()
-
-    t = threading.Thread(target=stream_output, args=(proc, name, color_code), daemon=True)
-    t.start()
-    return proc
-
-def shutdown_all(signum=None, frame=None):
-    print("\n\n🛑 Shutting down RoadWatch services...")
-    for name, proc in CHILD_PROCESSES:
-        try:
-            if IS_WINDOWS:
-                subprocess.run(['taskkill', '/pid', str(proc.pid), '/T', '/F'], capture_output=True)
-            else:
-                proc.terminate()
-        except Exception:
-            pass
-    print("✓ All services stopped. Goodbye!\n")
-    sys.exit(0)
-
-def kill_ports(ports):
-    """Check ports without terminating unrelated applications."""
-    for port in ports:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+def check_ports():
+    for port in (3000, 5001, 5173):
+        with socket.socket() as probe:
             probe.settimeout(0.5)
-            if probe.connect_ex(('127.0.0.1', port)) == 0:
-                raise SystemExit(f'Port {port} is already in use. Stop the existing service before running RoadWatch again.')
+            if probe.connect_ex(("127.0.0.1", port)) == 0:
+                raise SystemExit(f"Port {port} is in use. Stop that service and run RoadWatch again.")
 
-def start_services():
-    print_banner()
-    os.environ.setdefault('PYTHON_EXECUTABLE', sys.executable)
 
-    # Clear any stale processes occupying ports
-    print("Checking service ports (3000, 5001, 5173)...")
-    kill_ports([3000, 5001, 5173])
-
-    # Check node_modules
-    if not os.path.exists(os.path.join(ROOT_DIR, 'node_modules')):
-        print("ℹ node_modules not detected. Running initial setup first...\n")
-        setup_dependencies()
-
-    npm_cmd = 'npm.cmd' if IS_WINDOWS else 'npm'
-    npx_cmd = 'npx.cmd' if IS_WINDOWS else 'npx'
-
-    # Register exit handlers
-    signal.signal(signal.SIGINT, shutdown_all)
-    signal.signal(signal.SIGTERM, shutdown_all)
-
-    print("\n🚀 Starting RoadWatch Full-Stack Services:\n")
-
-    # 1. Warm YOLO Inference Server (Python on Port 5001)
-    infer_server = os.path.join(ROOT_DIR, 'scripts', 'infer_server.py')
-    if os.path.exists(infer_server) and os.path.exists(os.path.join(ROOT_DIR, 'model', 'best.pt')):
-        start_child_process("YOLO-ML", [sys.executable, infer_server, "5001"], ROOT_DIR, "35")
-        time.sleep(1.0)
-
-    # 2. Node.js Express Backend (Port 3000)
-    backend_dir = os.path.join(ROOT_DIR, 'backend')
-    start_child_process("BACKEND", ['node', 'src/server.js'], backend_dir, "34")
-    time.sleep(1.2)
-
-    # 3. Vite Frontend Server (Port 5173)
-    frontend_dir = os.path.join(ROOT_DIR, 'frontend')
-    vite_script = os.path.join(ROOT_DIR, 'node_modules', 'vite', 'bin', 'vite.js')
-    start_child_process("FRONTEND", ['node', vite_script, '--host', '--strictPort', '--port', '5173'], frontend_dir, "32")
-
-    print("\n" + "="*62)
-    print("  🌐 ACCESS ROADWATCH IN YOUR BROWSER:")
-    print("     Frontend Application:  http://localhost:5173")
-    print("     Backend API & Health:  http://localhost:3000")
-    print("     YOLO Inference Engine: http://127.0.0.1:5001")
-    print("="*62)
-    print("\n  Press Ctrl+C at any time to cleanly stop all servers.\n")
-
-    reported_dead = set()
+def start_services(python):
+    check_ports()
+    env = {**os.environ, "PYTHON_EXECUTABLE": python}
+    commands = [
+        ("backend", ["node", "scripts/start-local-backend.js"], ROOT),
+        ("inference", [python, "-u", "scripts/infer_server.py", "5001"], ROOT),
+        ("frontend", ["node", str(ROOT / "node_modules/vite/bin/vite.js"), "--host", "127.0.0.1"], ROOT / "frontend"),
+    ]
+    processes = []
     try:
+        for name, command, cwd in commands:
+            processes.append((name, subprocess.Popen(command, cwd=cwd, env=env)))
+        print("Open http://localhost:5173 after the API and model are ready. Press Ctrl+C to stop.", flush=True)
         while True:
-            time.sleep(1)
-            for name, proc in CHILD_PROCESSES:
-                if proc.poll() is not None and name not in reported_dead:
-                    reported_dead.add(name)
-                    print(f"⚠️ Service '{name}' exited with code {proc.returncode}")
+            for name, process in processes:
+                if process.poll() is not None:
+                    raise SystemExit(f"RoadWatch {name} exited ({process.returncode}). Check the output above.")
+            time.sleep(0.5)
     except KeyboardInterrupt:
-        shutdown_all()
+        pass
+    finally:
+        for _, process in processes:
+            if process.poll() is None:
+                process.terminate()
+        for _, process in processes:
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+
 
 def main():
-    parser = argparse.ArgumentParser(description="RoadWatch Rebuild Full-Stack Launcher")
-    parser.add_argument('--setup', action='store_true', help='Install dependencies & build frontend')
-    parser.add_argument('--test', action='store_true', help='Run test suite')
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--setup", action="store_true", help="Install dependencies and prepare MongoDB")
+    mode.add_argument("--test", action="store_true", help="Run API tests and inference on a bundled sample")
     args = parser.parse_args()
 
+    python = ensure_dependencies()
     if args.setup:
-        setup_dependencies()
+        run("node", "scripts/start-local-backend.js", "--setup")
+        run(shutil.which("npm.cmd" if WINDOWS else "npm"), "run", "build:frontend")
+        print("Setup complete. Run runall.bat to start RoadWatch.")
     elif args.test:
-        run_tests()
+        run(shutil.which("npm.cmd" if WINDOWS else "npm"), "test")
+        run(python, "scripts/infer.py", "--image", str(SAMPLE))
     else:
-        start_services()
+        start_services(python)
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise SystemExit(f"RoadWatch setup failed: {error}") from None
