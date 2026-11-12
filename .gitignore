@@ -1,5 +1,7 @@
 # Node
 .roadwatch-backup/
+/.roadwatch/
+/.venv/
 node_modules/
 dist/
 .vite/
@@ -47,9 +49,13 @@ Thumbs.db
 
 # Model weights
 *.pt
+!/model/best.pt
 *.pth
 *.onnx
 
 # Secrets
 .env.*
 !.env.example
+
+/roadwatch-*.png
+/scripts/temp_*
